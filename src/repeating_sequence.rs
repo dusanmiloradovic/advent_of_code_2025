@@ -37,7 +37,7 @@ fn normalize_range(left_range: &str, right_range: &str) -> Option<(String, Strin
     }
     if rr_odd_digits {
         let base: u32 = 10;
-        let v = base.pow(rr.len() as u32 + 1) - 1;
+        let v = base.pow(rr.len() as u32 - 1) - 1;
         rr = v.to_string();
     }
     Some((lr, rr))
