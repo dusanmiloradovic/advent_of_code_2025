@@ -1,18 +1,18 @@
 use std::fs::read_to_string;
 
-fn invalid_in_normalized_range(left_range: &str, right_range: &str) -> Vec<u32> {
-    let lr_num = left_range.parse::<u32>().unwrap();
-    let rr_num = right_range.parse::<u32>().unwrap();
+fn invalid_in_normalized_range(left_range: &str, right_range: &str) -> Vec<u128> {
+    let lr_num = left_range.parse::<u128>().unwrap();
+    let rr_num = right_range.parse::<u128>().unwrap();
     // ranges have same length
-    let mut ret: Vec<u32> = vec![];
+    let mut ret: Vec<u128> = vec![];
     let mid_point = &left_range.len() / 2;
     let ll = &left_range[..mid_point];
     let rl = &right_range[..mid_point];
-    let mut ml = ll.parse::<u32>().unwrap();
-    let mr = rl.parse::<u32>().unwrap();
+    let mut ml = ll.parse::<u128>().unwrap();
+    let mr = rl.parse::<u128>().unwrap();
     while ml <= mr {
         let candidate = format!("{}{}", &ml, &ml);
-        let cn = candidate.parse::<u32>().unwrap();
+        let cn = candidate.parse::<u128>().unwrap();
         if (&cn >= &lr_num && &cn <= &rr_num) {
             ret.push(cn);
         }
@@ -31,20 +31,20 @@ fn normalize_range(left_range: &str, right_range: &str) -> Option<(String, Strin
     }
 
     if lr_odd_digits {
-        let base: u32 = 10;
+        let base: u128 = 10;
         let v = base.pow(lr.len() as u32);
         lr = v.to_string();
     }
     if rr_odd_digits {
-        let base: u32 = 10;
+        let base: u128 = 10;
         let v = base.pow(rr.len() as u32 - 1) - 1;
         rr = v.to_string();
     }
     Some((lr, rr))
 }
 
-fn calculate_invalid_in_ranges(ranges: &[(&str, &str)]) -> Vec<u32> {
-    let mut ret: Vec<u32> = vec![];
+fn calculate_invalid_in_ranges(ranges: &[(&str, &str)]) -> Vec<u128> {
+    let mut ret: Vec<u128> = vec![];
     for (l, r) in ranges {
         let nr = normalize_range(l, r);
         match nr {
@@ -70,7 +70,9 @@ pub fn calculate_invalid_in_range() {
     }
 
     let v = calculate_invalid_in_ranges(&ranges);
-    for _v in v {
-        print!("{_v}\n");
-    }
+    // for _v in v {
+    //     print!("{_v}\n");
+    // }
+    let sum: u128 = v.iter().sum();
+    print!("{sum}");
 }
