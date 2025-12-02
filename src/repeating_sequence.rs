@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs::read_to_string;
 
 fn invalid_in_normalized_range(left_range: &str, right_range: &str) -> Vec<u128> {
@@ -46,11 +47,14 @@ fn normalize_range(left_range: &str, right_range: &str) -> Option<(String, Strin
 fn calculate_invalid_in_ranges(ranges: &[(&str, &str)]) -> Vec<u128> {
     let mut ret: Vec<u128> = vec![];
     for (l, r) in ranges {
+        print!("For range {l}... {r}, invalid keys:\n");
         let nr = normalize_range(l, r);
         match nr {
             Some((lr, rr)) => {
+                print!("Normalized range {lr} {rr}\n");
                 let v = invalid_in_normalized_range(&lr, &rr);
                 for _v in v {
+                    print!("{_v}\n");
                     ret.push(_v);
                 }
             }
@@ -62,7 +66,8 @@ fn calculate_invalid_in_ranges(ranges: &[(&str, &str)]) -> Vec<u128> {
 
 pub fn calculate_invalid_in_range() {
     let file_lines = read_to_string("./puzzle_input_day2.txt").unwrap();
-    let fs = file_lines.split(",");
+    let no_whitespace: String = file_lines.chars().filter(|c| !c.is_whitespace()).collect();
+    let fs = no_whitespace.split(",");
     let mut ranges: Vec<(&str, &str)> = vec![];
     for f in fs {
         let gg = f.split("-").collect::<Vec<&str>>();
@@ -70,9 +75,12 @@ pub fn calculate_invalid_in_range() {
     }
 
     let v = calculate_invalid_in_ranges(&ranges);
-    // for _v in v {
+    let s: HashSet<u128> = HashSet::from_iter(v.iter().cloned());
+    // for _v in s {
     //     print!("{_v}\n");
     // }
-    let sum: u128 = v.iter().sum();
-    print!("{sum}");
+
+    print!("***************************\n");
+    let sum: u128 = s.iter().sum();
+    print!("Sum = {sum}");
 }
