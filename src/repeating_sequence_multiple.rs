@@ -1,4 +1,4 @@
-use std::cmp::{max, min};
+use std::cmp::max;
 use std::collections::HashSet;
 use std::fs::read_to_string;
 
@@ -12,30 +12,31 @@ fn invalid_in_range_with_digits(
     let right_num = right_range.parse::<u128>().unwrap();
     let mut normalized_left = left_range.to_string();
     let mut normalized_right = right_range.to_string();
-    let satisfies_left = normalized_left.len() % digits == 0;
-    let satisfies_right = normalized_right.len() % digits == 0;
+    let satisfies_left = normalized_left.len() % digits == 0 && normalized_left.len()>1;
+    let satisfies_right = normalized_right.len() % digits == 0 && normalized_right.len()>1;
     let mut ret: Vec<u128> = vec![];
-    if (!satisfies_left && !satisfies_right) {
+    if !satisfies_left && !satisfies_right {
         // Here we rely on problem input, there will be no differences in keys with two orders of mangiture
         // (two digits more), the max diff is one digit, so if none of this is satisified we return None
         return None;
     }
-    if (!satisfies_left) {
+    if !satisfies_left {
         normalized_left = base.pow(right_range.len() as u32 - 1).to_string();
     }
-    if (!satisfies_right) {
+    if !satisfies_right {
         normalized_right = (base.pow(left_range.len() as u32) - 1).to_string();
     }
 
     let left_bound = normalized_left[..digits].parse::<u128>().unwrap();
-    let right_bound = normalized_right[..digits].parse::<u128>().unwrap();
+    //let right_bound = normalized_right[..digits].parse::<u128>().unwrap();
+    let right_bound = base.pow(digits as u32 +1);
 
     let mut no_of_digits = normalized_left.len();
     loop {
         let repeats = no_of_digits / digits;
         for x in left_bound..right_bound {
             let mut candidate = "".to_string();
-            for i in 0..repeats {
+            for _ in 0..repeats {
                 candidate.push_str(x.to_string().as_str());
             }
             let can_num = candidate.parse::<u128>().unwrap();
