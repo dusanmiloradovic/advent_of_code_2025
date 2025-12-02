@@ -1,4 +1,5 @@
 use std::cmp::{max, min};
+use std::collections::HashSet;
 use std::fs::read_to_string;
 
 fn invalid_in_range_with_digits(
@@ -7,6 +8,8 @@ fn invalid_in_range_with_digits(
     digits: usize,
 ) -> Option<Vec<u128>> {
     let base: u128 = 10;
+    let left_num = left_range.parse::<u128>().unwrap();
+    let right_num = right_range.parse::<u128>().unwrap();
     let mut normalized_left = left_range.to_string();
     let mut normalized_right = right_range.to_string();
     let satisfies_left = normalized_left.len() % digits == 0;
@@ -36,7 +39,8 @@ fn invalid_in_range_with_digits(
                 candidate.push_str(x.to_string().as_str());
             }
             let can_num = candidate.parse::<u128>().unwrap();
-            if can_num >= left_bound && can_num <= right_bound {
+
+            if can_num >= left_num && can_num <= right_num {
                 ret.push(can_num);
             }
         }
@@ -51,8 +55,8 @@ fn invalid_in_range_with_digits(
 fn invalid_in_range(left_range: &str, right_range: &str) -> Option<Vec<u128>> {
     let mut ret: Vec<u128> = vec![];
     let max_digits = max(left_range.len(), right_range.len());
-    for i in 1..min(1, max_digits / 2) {
-        let r = invalid_in_range_with_digits(left_range, right_range, i);
+    for i in 0..max(1, max_digits / 2) {
+        let r = invalid_in_range_with_digits(left_range, right_range, i + 1);
         match r {
             Some(v) => {
                 for _v in v {
@@ -74,13 +78,18 @@ pub fn calculate_invalid_in_range() {
         let gg = f.split("-").collect::<Vec<&str>>();
         ranges.push((gg[0], gg[1]));
     }
+    let mut s: HashSet<u128> = HashSet::new();
     for (l, r) in ranges {
         print!("For range {l}..{r}\n");
         let inval = invalid_in_range(l, r);
         if let Some(v) = inval {
             for _v in v {
                 print!("{_v}\n");
+                s.insert(_v);
             }
         }
     }
+    print!("***************************\n");
+    let sum: u128 = s.iter().sum();
+    print!("Sum = {sum}");
 }
