@@ -44,7 +44,7 @@ fn count_zeros_including_passing_through(rotations: &[i32]) -> u32 {
     let mut dial = INITIAL_DIAL;
     let mut old_dial = dial;
     for r in rotations {
-        print!("dial {r} for {dial}");
+      //  print!("dial {r} for {dial}");
 
         let full_s = (r / DIALS).abs() as u32;
         ret += full_s;
@@ -67,7 +67,7 @@ fn count_zeros_including_passing_through(rotations: &[i32]) -> u32 {
             }
         }
 
-        print!(", after {dial},,old_dial={old_dial}, ret= {ret}\n");
+       // print!(", after {dial},,old_dial={old_dial}, ret= {ret}\n");
         old_dial = dial;
     }
     ret
@@ -79,5 +79,5 @@ pub fn times_zero_dial(file_name: &str) {
     let seq_z = get_seq(z);
     let seq = seq_z.as_slice();
     let zeros = count_zeros_including_passing_through(seq);
-    print!("How many zeros? {zeros} zeros");
+    print!("How many zeros? {zeros} zeros\n");
 }
