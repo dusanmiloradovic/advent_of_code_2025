@@ -37,18 +37,22 @@ fn find_twelve_digit_joltage(v: &str) -> u128 {
         joltage_line[i] = v[i..i + 1].parse::<u128>().unwrap();
     }
     let mut joltage_vec: Vec<u128> = vec![0; DIGITS];
-    for i in 0..v.len() - DIGITS {
-        for j in 0..DIGITS {
-            if joltage_line[i + j] > joltage_vec[j] {
-                joltage_vec[j] = joltage_line[i + j];
-                copy_slice_from(&joltage_line, &mut joltage_vec, i, j + 1);
+    for i in 0..v.len() {
+        let mut offset = DIGITS as i32 - (v.len() - i) as i32;
+        if offset < 0 {
+            offset = 0;
+        }
+        for j in 0..DIGITS - offset as usize {
+            if joltage_line[i + j] > joltage_vec[j + offset as usize] {
+                joltage_vec[j + offset as usize] = joltage_line[i + j];
+                copy_slice_from(&joltage_line, &mut joltage_vec, i, j + 1 + offset as usize);
             }
         }
     }
     let mut joltage: u128 = 0;
     let base: u128 = 10;
     for i in 0..DIGITS {
-        joltage += base.pow((DIGITS - i - 1) as u32)*joltage_vec[i];
+        joltage += base.pow((DIGITS - i - 1) as u32) * joltage_vec[i];
     }
     joltage
 }
@@ -60,16 +64,16 @@ pub fn find_joltage() {
         rez += j;
         // print!("{j}\n");
     }
-    print!("joltage={rez}");
+    print!("joltage={rez}\n");
 }
 
-pub fn find_12_digits_joltage(){
+pub fn find_12_digits_joltage() {
     let mut rez: u128 = 0;
     let lines = get_puzzle_lines();
     for l in lines {
         let j = find_twelve_digit_joltage(&l);
         rez += j;
-        print!("{j}\n");
+        //print!("{j}\n");
     }
     print!("12 digits joltage={rez}");
 }
