@@ -1,6 +1,6 @@
 use std::fs::read_to_string;
 
-fn get_surrounding_count(v: &Vec<Vec<u8>>, i: usize, j: usize) -> u8 {
+fn get_surrounding_count(v: &mut Vec<Vec<u8>>, i: usize, j: usize) -> u8 {
     let mut ret: u8 = 0;
     if i > 0 {
         let prev_row = &v[i - 1];
@@ -32,21 +32,26 @@ fn get_surrounding_count(v: &Vec<Vec<u8>>, i: usize, j: usize) -> u8 {
     ret
 }
 
-fn count_accessible(places: Vec<Vec<u8>>) -> u32 {
+fn count_accessible(places: &mut Vec<Vec<u8>>) -> u32 {
     let mut ret: u32 = 0;
+    let mut dels: Vec<(usize, usize)> = Vec::new();
     let row_len = places.len();
     for i in 0..row_len {
-        let row = places.get(i);
-        let col_len = row.unwrap().len();
+        //let row = &places[i];
+        let col_len = places[i].len();
         for j in 0..col_len {
-            let cnt = get_surrounding_count(&places, i, j);
-            let val = row.unwrap()[j];
-            print!("{val} ... {i},{j}={cnt}\n");
-            if cnt < 4 && row.unwrap()[j] == 1 {
+            let cnt = get_surrounding_count(places, i, j);
+            let val = places[i][j];
+            // print!("{val} ... {i},{j}={cnt}\n");
+            if cnt < 4 && places[i][j] == 1 {
                 //print!("{i},{j}\n");
                 ret += 1;
+                dels.push((i, j));
             }
         }
+    }
+    for (i, j) in dels {
+        places[i][j] = 0;
     }
     ret
 }
@@ -69,12 +74,30 @@ fn parse_puzzle_input(input_lines: Vec<String>) -> Vec<Vec<u8>> {
 }
 
 pub fn find_roll_count() {
+    let mut arr = get_puzzle_input_arr();
+    let cnt = count_accessible(&mut arr);
+    print!("{cnt} roll counts\n");
+}
+
+fn get_puzzle_input_arr() -> Vec<Vec<u8>> {
     let lines: Vec<String> = read_to_string("puzzle_input_day4.txt")
         .unwrap()
         .lines()
         .map(String::from)
         .collect();
     let arr = parse_puzzle_input(lines);
-    let cnt = count_accessible(arr);
-    print!("{cnt} roll counts");
+    arr
+}
+
+pub fn find_total_roll_count() {
+    let mut total_cnt: u32 = 0;
+    let mut arr = get_puzzle_input_arr();
+    loop {
+        let cnt = count_accessible(&mut arr);
+        if cnt == 0 {
+            break;
+        }
+        total_cnt += cnt;
+    }
+    print!("{total_cnt} total roll count\n");
 }

@@ -11,4 +11,5 @@ fn main() {
     // joltage::find_joltage();
     // joltage::find_12_digits_joltage();
     forklift::find_roll_count();
+    forklift::find_total_roll_count();
 }
