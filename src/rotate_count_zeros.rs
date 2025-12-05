@@ -1,5 +1,5 @@
 use std::fs::read_to_string;
-
+use crate::utils;
 const DIALS: i32 = 100;
 const INITIAL_DIAL: i32 = 50;
 fn get_seq(inn: &[String]) -> Vec<i32> {
@@ -17,13 +17,7 @@ fn get_seq(inn: &[String]) -> Vec<i32> {
     ret
 }
 
-fn read_file(file_name: &str) -> Vec<String> {
-    read_to_string(file_name)
-        .unwrap()
-        .lines()
-        .map(String::from)
-        .collect()
-}
+
 
 fn count_zeros(rotations: &[i32]) -> u32 {
     let mut ret: u32 = 0;
@@ -74,7 +68,7 @@ fn count_zeros_including_passing_through(rotations: &[i32]) -> u32 {
 }
 
 pub fn times_zero_dial(file_name: &str) {
-    let file_lines = read_file(file_name);
+    let file_lines = utils::read_file(file_name);
     let z = &file_lines;
     let seq_z = get_seq(z);
     let seq = seq_z.as_slice();
