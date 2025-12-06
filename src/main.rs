@@ -5,6 +5,7 @@ mod rotate_count_zeros;
 mod forklift;
 mod spoiled_food;
 mod utils;
+mod cephalodpod_math;
 
 fn main() {
    // rotate_count_zeros::times_zero_dial("rotate_zero_count_puzzle_input.txt");
@@ -14,6 +15,7 @@ fn main() {
     // // joltage::find_12_digits_joltage();
     // forklift::find_roll_count();
     // forklift::find_total_roll_count();
-    spoiled_food::count_fresh();
-    spoiled_food::count_ranges();
+   // spoiled_food::count_fresh();
+    //spoiled_food::count_ranges();
+    cephalodpod_math::get_matrix_sum();
 }
