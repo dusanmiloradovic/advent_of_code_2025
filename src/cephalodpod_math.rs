@@ -45,13 +45,38 @@ fn get_puzzle_input() -> (Vec<Vec<u128>>, Vec<String>, usize) {
     (matrix, op, width)
 }
 
-fn perform_ceph_oper(op:&str, inp:Vec<String>)->u128{
+fn perform_ceph_oper(op: &str, inp: Vec<String>) -> u128 {
     print!("perform {op} \n");
-    for i in inp{
+    for i in &inp {
         print!("{i}\n")
     }
     print!("\n");
-    0
+    let mut s: u128 = 0;
+    if op == "*" {
+        s = 1;
+    }
+    let str_len = inp[0].len(); // all have the same length
+
+    for _j in 0..str_len {
+        let j = str_len - _j - 1;
+        let mut dig_str = "".to_string();
+        for jj in &inp {
+            let jj_dig = &jj[j..j + 1];
+            if jj_dig == "" {
+                continue;
+            }
+            dig_str += jj_dig;
+        }
+        print!("s={dig_str} {op} {s}\n");
+        let dig_num = dig_str.parse::<u128>().unwrap();
+
+        if op == "*" {
+            s = s * dig_num;
+        } else {
+            s += dig_num;
+        }
+    }
+    s
 }
 
 pub fn perform_ceph_math_puzzle() {
@@ -62,41 +87,41 @@ pub fn perform_ceph_math_puzzle() {
         .into_iter()
         .map(|s| s.trim().to_string())
         .collect::<Vec<String>>();
-    let mut op_ind:usize =0;
+    let mut op_ind: usize = 0;
     let ln = op.len();
     //let mut words =vec!["".to_string();str_vec.len()-1];
-    let mut prev_index : usize =0;
-    let mut ind:usize = 0;
-    let mut ret:u128=0;
-    loop{
+    let mut prev_index: usize = 0;
+    let mut ind: usize = 0;
+    let mut ret: u128 = 0;
+    loop {
         let mut all_blanks = true;
         let mut eol = false;
-        for l in 0.. str_vec.len()-1{
-            let line=&str_vec[l];
-            if l == line.len()-1{
-                eol=true;
+        for l in 0..str_vec.len() - 1 {
+            let line = &str_vec[l];
+            if ind == line.len() {
+                eol = true;
+                break;
             }
-            let char = &line[ind..ind+1];
-            all_blanks = all_blanks && char==" ";
+            let char = &line[ind..ind + 1];
+            all_blanks = all_blanks && char == " ";
         }
-        if all_blanks || eol{
+        if all_blanks || eol {
             let operation = &op[op_ind];
-            let mut words:Vec<String>= vec!["".to_string();str_vec.len()-1];
-            for l in 0..str_vec.len()-1{
-                let line=&str_vec[l];
-                let word= line[prev_index..ind].to_string();
-                words[l]=word;
+            let mut words: Vec<String> = vec!["".to_string(); str_vec.len() - 1];
+            for l in 0..str_vec.len() - 1 {
+                let line = &str_vec[l];
+                let word = line[prev_index..ind].to_string();
+                words[l] = word;
             }
-            ret+=perform_ceph_oper(&op[op_ind], words);
+            ret += perform_ceph_oper(&op[op_ind], words);
             prev_index = ind;
-            op_ind +=1;
+            op_ind += 1;
         }
-        if eol{
+        if eol {
             break;
         }
-        ind +=1;
+        ind += 1;
     }
-
 }
 fn perform_oper(oper: &str, a1: u128, a2: u128) -> u128 {
     if oper == "*" { a1 * a2 } else { a1 + a2 }
