@@ -17,5 +17,6 @@ fn main() {
     // forklift::find_total_roll_count();
    // spoiled_food::count_fresh();
     //spoiled_food::count_ranges();
-    cephalodpod_math::get_matrix_sum();
+    // cephalodpod_math::get_matrix_sum();
+    cephalodpod_math::perform_ceph_math_puzzle();
 }
