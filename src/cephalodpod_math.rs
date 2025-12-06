@@ -67,8 +67,12 @@ fn perform_ceph_oper(op: &str, inp: Vec<String>) -> u128 {
             }
             dig_str += jj_dig;
         }
+
+        if dig_str.trim()==""{
+            break;
+        }
         print!("s={dig_str} {op} {s}\n");
-        let dig_num = dig_str.parse::<u128>().unwrap();
+        let dig_num = dig_str.trim().parse::<u128>().unwrap();
 
         if op == "*" {
             s = s * dig_num;
@@ -80,7 +84,7 @@ fn perform_ceph_oper(op: &str, inp: Vec<String>) -> u128 {
 }
 
 pub fn perform_ceph_math_puzzle() {
-    let str_vec = utils::read_file("puzzle_input_day6_test.txt");
+    let str_vec = utils::read_file("puzzle_input_day6.txt");
 
     let last_line = str_vec.get(str_vec.len() - 1).unwrap();
     let op = smart_split(last_line)
@@ -122,6 +126,7 @@ pub fn perform_ceph_math_puzzle() {
         }
         ind += 1;
     }
+    print!("CephaloSum= {ret}\n");
 }
 fn perform_oper(oper: &str, a1: u128, a2: u128) -> u128 {
     if oper == "*" { a1 * a2 } else { a1 + a2 }
@@ -147,32 +152,3 @@ pub fn get_matrix_sum() {
     }
     print!("Sum={sum}\n");
 }
-
-// pub fn get_cephal_matrix_sum() {
-//     let (matrix, operations, width) = get_ceph_math_puzzle_input();
-//     let mut sum: u128 = 0;
-//     for j in 0..width {
-//         let row_0 = &matrix[0];
-//         let dig_len = row_0[j].len();
-//         let op = &operations[j];
-//         let mut s: u128 = 0;
-//         if op == "*" {
-//             s = 1;
-//         }
-//         for k in (dig_len..0).rev() {
-//             let mut dig_str = "".to_string();
-//             for row in &matrix {
-//                 let col = &row[j];
-//                 let dig = &col[k..k + 1];
-//                 if dig.trim() == "" {
-//                     continue;
-//                 }
-//                 dig_str = dig_str + dig;
-//             }
-//             let num_from_col = dig_str.parse::<u128>().unwrap();
-//             s = perform_oper(op, s, num_from_col)
-//         }
-//         sum += s;
-//     }
-//     print!("Cephal sum={sum}\n");
-// }
