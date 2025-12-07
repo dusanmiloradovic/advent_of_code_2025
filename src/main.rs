@@ -20,5 +20,5 @@ fn main() {
     //spoiled_food::count_ranges();
     // cephalodpod_math::get_matrix_sum();
    // cephalodpod_math::perform_ceph_math_puzzle();
-    beam_splitter::get_beam_splits();
+    beam_splitter::get_count_of_tree();
 }
