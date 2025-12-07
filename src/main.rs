@@ -6,6 +6,7 @@ mod forklift;
 mod spoiled_food;
 mod utils;
 mod cephalodpod_math;
+mod beam_splitter;
 
 fn main() {
    // rotate_count_zeros::times_zero_dial("rotate_zero_count_puzzle_input.txt");
@@ -18,5 +19,6 @@ fn main() {
    // spoiled_food::count_fresh();
     //spoiled_food::count_ranges();
     // cephalodpod_math::get_matrix_sum();
-    cephalodpod_math::perform_ceph_math_puzzle();
+   // cephalodpod_math::perform_ceph_math_puzzle();
+    beam_splitter::get_beam_splits();
 }

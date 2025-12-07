@@ -110,7 +110,6 @@ pub fn perform_ceph_math_puzzle() {
             all_blanks = all_blanks && char == " ";
         }
         if all_blanks || eol {
-            let operation = &op[op_ind];
             let mut words: Vec<String> = vec!["".to_string(); str_vec.len() - 1];
             for l in 0..str_vec.len() - 1 {
                 let line = &str_vec[l];
