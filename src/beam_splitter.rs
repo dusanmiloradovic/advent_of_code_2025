@@ -1,6 +1,6 @@
 use crate::utils;
 use std::cell::RefCell;
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::rc::Rc;
 
 #[derive(Clone, Debug)]
@@ -9,29 +9,35 @@ struct BTree {
     left: RefCell<Option<Rc<BTree>>>,
     right: RefCell<Option<Rc<BTree>>>,
 }
-fn get_beams(previous_beams: &[usize], splitters: &[usize], mut paths: Vec<Vec<usize>>) -> (usize, Vec<usize>, Vec<Vec<usize>>) {
+fn get_beams(
+    previous_beams: &[usize],
+    splitters: &[usize],
+    vec_count: &mut [usize],
+) -> (usize, Vec<usize>) {
     let mut split_count: usize = 0;
     let mut ret: Vec<usize> = Vec::new();
-    
+
     if splitters.is_empty() {
-        return (0, previous_beams.to_vec(), paths);
+        return (0, previous_beams.to_vec());
     }
-    
+
     let mut j = 0; // index for splitters
     let mut k = 0; // index for beams
     let splitters_len = splitters.len();
     let beams_len = previous_beams.len();
-    
+    let mut changes: HashMap<usize, usize> = HashMap::new();
+    let mut removals: Vec<usize> = Vec::new();
+    let mut already_passed: HashSet<usize> = HashSet::new();
     while k < beams_len {
         if j == splitters_len {
             // Copy the rest of beams
             ret.extend_from_slice(&previous_beams[k..]);
             break;
         }
-        
+
         let splitter = splitters[j];
         let beam = previous_beams[k];
-        
+
         if beam < splitter {
             ret.push(beam);
             k += 1;
@@ -41,32 +47,31 @@ fn get_beams(previous_beams: &[usize], splitters: &[usize], mut paths: Vec<Vec<u
             ret.push(beam + 1);
             k += 1;
             j += 1;
-            
-            // Update paths in-place
-            let mut indices_to_split = Vec::new();
-            for (idx, path) in paths.iter().enumerate() {
-                if *path.last().unwrap() == beam {
-                    indices_to_split.push(idx);
-                }
-            }
-            
+
             // Process splits from back to front to maintain valid indices
-            for &idx in indices_to_split.iter().rev() {
-                let mut path = paths.swap_remove(idx);
-                let mut path2 = path.clone();
-                path.push(beam - 1);
-                path2.push(beam + 1);
-                paths.push(path);
-                paths.push(path2);
+
+            if let Some(_) = already_passed.get(&beam) {
+                continue;
             }
-        } else { // beam > splitter
+            let ex = vec_count[beam];
+            vec_count[beam - 1] += ex;
+            vec_count[beam + 1] += ex;
+            print!("Changing for beam {beam} increasing neighbours by {ex}\n");
+            removals.push(beam);
+            already_passed.insert(beam);
+        } else {
+            // beam > splitter
             j += 1;
             // Don't increment k, re-check this beam with next splitter
             continue;
         }
     }
-    
-    (split_count, ret, paths)
+
+    for k in removals {
+        vec_count[k] = 0;
+    }
+
+    (split_count, ret)
 }
 
 fn get_splitters(line: &str) -> Vec<usize> {
@@ -80,7 +85,7 @@ fn get_splitters(line: &str) -> Vec<usize> {
 }
 
 fn construct_binary_tree() -> Rc<BTree> {
-    let str_vec = utils::read_file("puzzle_input_day7_test.txt");
+    let str_vec = utils::read_file("puzzle_input_day7.txt");
     let first_line = str_vec[0].as_str();
     let ind = first_line.find("S").unwrap();
     let mut lookup_map: HashMap<usize, Rc<BTree>> = HashMap::new();
@@ -166,26 +171,33 @@ pub fn get_beam_splits() {
     let mut split_cnt: usize = 0;
     let str_vec = utils::read_file("puzzle_input_day7.txt");
     let first_line = str_vec[0].as_str();
+    let width = first_line.len();
+    let mut path_count: Vec<usize> = vec![0; width];
     let ind = first_line.find("S").unwrap();
+    path_count[ind] = 1;
     let mut beams = vec![ind];
     let mut cnt = 0;
-    let mut prev_splitters :Vec<usize> = Vec::new();
-    let mut paths :Vec<Vec<usize>> = vec![beams.clone()];
-
+    let mut prev_splitters: Vec<usize> = Vec::new();
 
     for i in 1..str_vec.len() {
         print!("Starting line {i}");
         let splitters = get_splitters(&str_vec[i]);
         prev_splitters = splitters.clone();
         let old_beams = beams.clone();
-        (cnt, beams,paths) = get_beams(&beams, &splitters,paths);
-       // print!("beams {:?}\n", beams);
+        (cnt, beams) = get_beams(&beams, &splitters, &mut path_count);
+        print!("path count {:?}\n", path_count);
+        // print!("beams {:?}\n", beams);
         split_cnt += cnt;
-
     }
     //print!("paths {:?}\n", paths);
     print!("Beam split count={split_cnt}");
-    print!("path count {:?}\n", paths.len());
+    //print!("path count {:?}\n", path_count);
+    let mut summa:usize = 0;
+    for p in path_count{
+        summa +=p;
+    }
+    print!("And finally the result is {summa}\n");
+
 }
 
 fn bfs_count(bt: Rc<BTree>) {
