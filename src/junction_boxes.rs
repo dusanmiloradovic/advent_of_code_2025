@@ -1,7 +1,5 @@
 use crate::utils;
-use std::cmp::Ordering;
-use std::collections::{BTreeMap, HashMap, HashSet};
-use std::fmt;
+use std::collections::{BTreeMap, HashMap};
 
 fn distance(x: (usize, usize, usize), y: (usize, usize, usize)) -> usize {
     let sq = (x.0 as i64 - y.0 as i64).pow(2)
@@ -9,45 +7,7 @@ fn distance(x: (usize, usize, usize), y: (usize, usize, usize)) -> usize {
         + (x.2 as i64 - y.2 as i64).pow(2);
     sq.isqrt() as usize
 }
-#[derive(Hash, Clone)]
-struct Line {
-    dota: (usize, usize, usize),
-    dotb: (usize, usize, usize),
-}
-impl PartialEq for Line {
-    fn eq(&self, other: &Self) -> bool {
-        self.dota == other.dota && self.dotb == other.dotb
-    }
-}
 
-impl Eq for Line {}
-
-impl PartialOrd for Line {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        let val1 = distance(self.dota, self.dotb);
-        let val2 = distance(other.dota, other.dotb);
-        val1.partial_cmp(&val2)
-    }
-}
-
-impl Ord for Line {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).unwrap()
-    }
-}
-
-impl fmt::Debug for Line {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let a0 = self.dota.0;
-        let a1 = self.dota.1;
-        let a2 = self.dota.2;
-        let b0 = self.dotb.0;
-        let b1 = self.dotb.1;
-        let b2 = self.dotb.2;
-        let d = distance(self.dota, self.dotb);
-        write!(f, "Line ({a0},{a1},{a2})-({b0},{b1},{b2}) === {d}")
-    }
-}
 fn prepare_vectors() -> Vec<(usize, usize, usize)> {
     let str_vec = utils::read_file("puzzle_input_day8.txt");
     let mut ret: Vec<(usize, usize, usize)> = Vec::new();
@@ -63,128 +23,6 @@ fn prepare_vectors() -> Vec<(usize, usize, usize)> {
     ret
 }
 
-fn calculate(vectors: Vec<(usize, usize, usize)>, top: usize) {
-    let mut groups: Vec<u32> = Vec::new();
-    let mut dot_group_mapping: HashMap<(usize, usize, usize), usize> = HashMap::new();
-    let mut reverse_group_lookup: HashMap<usize, Vec<(usize, usize, usize)>> = HashMap::new();
-    let mut lista: Vec<Line> = Vec::new();
-    for i in 0..vectors.len() {
-        for j in i + 1..vectors.len() {
-            if i == j {
-                continue;
-            }
-            let line = Line {
-                dota: vectors[i],
-                dotb: vectors[j],
-            };
-            lista.push(line);
-        }
-    }
-    lista.sort();
-    print!("Lista {:#?}", lista);
-    let mut cnt = 0;
-    // let mut i = 0; // restarting loop
-
-    for i in 0..lista.len() {
-        //let kons = count_connections(&groups);
-        if cnt >= top {
-            break;
-        }
-        print!("cycle = ${i}, cnt=${cnt}");
-        // print!("groups={:?}\n", groups);
-
-        let line = &lista[i];
-        let mut exist_a = false;
-        let mut exist_b = false;
-        let mut dot_pos_a: usize = 0;
-        let mut dot_pos_b: usize = 0;
-        if let Some(dot) = dot_group_mapping.get(&line.dota) {
-            dot_pos_a = *dot;
-            exist_a = true;
-        }
-        if let Some(dot) = dot_group_mapping.get(&line.dotb) {
-            dot_pos_b = *dot;
-            exist_b = true;
-            // groups[*dot] += 1;
-            // dot_group_mapping.insert(approx(line.dota),*dot);
-            // TODO this is random, I will check on the data is it working, or there is some hidden logic
-            // actually this is ok , since if both dots already belong to the same set nothing should be done
-        }
-        if exist_a && exist_b && dot_pos_a == dot_pos_b {
-            print!("line already exist, skip\n");
-            continue;
-        }
-        if exist_a && exist_b {
-            groups[dot_pos_a] += groups[dot_pos_b];
-            groups[dot_pos_b] = 0;
-            if let Some(vec) = reverse_group_lookup.get(&dot_pos_b) {
-                for v in vec {
-                    dot_group_mapping.insert(*v, dot_pos_a);
-                }
-            }
-            reverse_group_lookup.remove(&dot_pos_b);
-            cnt += 1;
-            continue;
-        }
-        if exist_a {
-            groups[dot_pos_a] += 1;
-            cnt += 1;
-            dot_group_mapping.insert(line.dotb, dot_pos_a);
-            add_to_reverse_group(&mut reverse_group_lookup, &line.dotb, &dot_pos_a);
-            print!("dota already exist inserting dotb\n");
-            continue;
-        }
-        if exist_b {
-            groups[dot_pos_b] += 1;
-            cnt += 1;
-            dot_group_mapping.insert(line.dota, dot_pos_b);
-            add_to_reverse_group(&mut reverse_group_lookup, &line.dota, &dot_pos_b);
-            print!("dotb already exist inserting dota\n");
-            continue;
-        }
-
-        cnt += 1;
-        groups.push(2);
-        let pos = groups.len() - 1;
-        dot_group_mapping.insert(line.dota, pos);
-        dot_group_mapping.insert(line.dotb, pos);
-        add_to_reverse_group(&mut reverse_group_lookup, &line.dota, &pos);
-        add_to_reverse_group(&mut reverse_group_lookup, &line.dotb, &pos);
-        print!("inserting both dota and dotb\n");
-    }
-    groups.sort();
-    print!("Groups:{:?}\n", groups);
-    let gg = count_connections(&groups);
-    print!("Konneckija {gg}");
-    // print!("dot group mapping {:#?}\n", dot_group_mapping);
-}
-
-fn count_connections(groups: &Vec<u32>) -> usize {
-    let mut gg = 0;
-    for g in groups {
-        if *g != 0 {
-            gg += g - 1;
-        }
-    }
-    gg as usize
-}
-
-fn add_to_reverse_group(
-    reverse_group_lookup: &mut HashMap<usize, Vec<(usize, usize, usize)>>,
-    dot: &(usize, usize, usize),
-    pos: &usize,
-) {
-    match reverse_group_lookup.get(&pos) {
-        None => {
-            reverse_group_lookup.insert(*pos, vec![*dot]);
-        }
-        Some(v) => {
-            let mut vcl = v.clone();
-            vcl.push(*dot);
-            reverse_group_lookup.insert(*pos, vcl);
-        }
-    }
-}
 
 fn new_way(vectors: Vec<(usize, usize, usize)>, top: usize) {
     let mut groups: Vec<Vec<usize>> = Vec::new();
