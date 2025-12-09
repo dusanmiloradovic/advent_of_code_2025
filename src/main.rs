@@ -8,6 +8,7 @@ mod utils;
 mod cephalodpod_math;
 mod beam_splitter;
 mod junction_boxes;
+mod rectangles;
 
 fn main() {
    // rotate_count_zeros::times_zero_dial("rotate_zero_count_puzzle_input.txt");
@@ -23,5 +24,6 @@ fn main() {
    // cephalodpod_math::perform_ceph_math_puzzle();
    // beam_splitter::get_count_of_tree();
     //beam_splitter::get_beam_splits();
-    junction_boxes::get_areas_mul();
+    //junction_boxes::get_areas_mul();
+    rectangles::brute_force();
 }
