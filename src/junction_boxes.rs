@@ -9,7 +9,7 @@ fn distance(x: (usize, usize, usize), y: (usize, usize, usize)) -> usize {
 }
 
 fn prepare_vectors() -> Vec<(usize, usize, usize)> {
-    let str_vec = utils::read_file("puzzle_input_day8.txt");
+    let str_vec = utils::read_file("puzzle_input_day8_test.txt");
     let mut ret: Vec<(usize, usize, usize)> = Vec::new();
     for s in str_vec {
         let t = s.split(",").collect::<Vec<&str>>();
@@ -23,18 +23,20 @@ fn prepare_vectors() -> Vec<(usize, usize, usize)> {
     ret
 }
 
-
 fn new_way(vectors: Vec<(usize, usize, usize)>, top: usize) {
     let mut groups: Vec<Vec<usize>> = Vec::new();
-    let mut distances: BTreeMap<usize, (usize, usize)> = BTreeMap::new();
+    let mut distances: BTreeMap<String, (usize, usize)> = BTreeMap::new(); // String is a key, we add a little random to ensure uniqueness, and still keep the order
     let mut group_mapping: HashMap<usize, usize> = HashMap::new();
+    let mut cc = 0;
     for i in 0..vectors.len() {
-        for j in 0..vectors.len() {
+        for j in i+1..vectors.len() {
             if i == j {
                 continue;
             }
             let dist = distance(vectors[i], vectors[j]);
-            distances.insert(dist, (i, j));
+            let key = dist.to_string() + "_" + &*cc.to_string();
+            distances.insert(dist.to_string(), (i, j));
+            cc += 1;
         }
     }
     let mut i: i32 = -1;
@@ -104,5 +106,5 @@ fn new_way(vectors: Vec<(usize, usize, usize)>, top: usize) {
 
 pub fn get_areas_mul() {
     let vec = prepare_vectors();
-    new_way(vec, 1000);
+    new_way(vec, 10);
 }
