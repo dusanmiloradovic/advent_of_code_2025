@@ -1,6 +1,92 @@
 use crate::utils;
 use std::collections::BTreeMap;
 
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+enum WalkDirection {
+    Left,
+    Right,
+    Down,
+    Up,
+}
+
+#[derive(Debug)]
+struct ElfWalkStep {
+    moves: usize,
+    direction: WalkDirection,
+}
+
+type ElfWalk = Vec<ElfWalkStep>;
+// This is a directed cyclic graph (ring) that gives the path
+
+fn construct_elf_walk(initial_point: &(i128, i128), points: &[(i128, i128)]) -> ElfWalk {
+    let mut vertical_direction = WalkDirection::Down;
+    //once we react the bottom, we start going up
+    let mut the_walk = ElfWalk::new();
+    // The points are ordered by the row number of the input, and from the first point we are going right and down
+    let mut point = initial_point;
+    let mut current_direction = WalkDirection::Down; // the direction is the previous direction how we appear, 
+    loop {
+        if current_direction == WalkDirection::Up && point.0 == initial_point.0 && point.1 == initial_point.1{
+            break; //back to starting point, loop is complete
+        }
+        //break when the next point is the first point in the cycle TODO
+        if current_direction == WalkDirection::Up || current_direction == WalkDirection::Down {
+            let v = points
+                .into_iter()
+                .find(|p| p.1 == point.1 && p.0 != point.0)
+                .unwrap(); // should not panic if everything good
+            let dist = (point.0 - v.0).abs() as usize;
+            let mut new_direction = WalkDirection::Right;
+            if v.0 < point.0 {
+                new_direction = WalkDirection::Left;
+            }
+            let step = ElfWalkStep {
+                moves: dist,
+                direction: new_direction,
+            };
+            point = v;
+            the_walk.push(step);
+            current_direction = new_direction;
+        } else {
+            if vertical_direction == WalkDirection::Down {
+                match points.into_iter().find(|p| p.1 > point.1 && p.0 == point.0) {
+                    None => {
+                        vertical_direction = WalkDirection::Up;
+                    }
+                    Some(p) => {
+                        let dist = (point.1 - p.1).abs() as usize;
+                        point = p;
+                        let step = ElfWalkStep {
+                            moves: dist,
+                            direction: vertical_direction,
+                        };
+                        the_walk.push(step);
+                        current_direction = vertical_direction;
+                    }
+                }
+            } else {
+                match points.into_iter().find(|p| p.1 < point.1 && p.0 == point.0) {
+                    None => {
+                        break; // we reached the end and closed the curcuit
+                    }
+                    Some(p) => {
+                        let dist = (point.1 - p.1).abs() as usize;
+                        point = p;
+                        let step = ElfWalkStep {
+                            moves: dist,
+                            direction: vertical_direction,
+                        };
+                        the_walk.push(step);
+                        current_direction = vertical_direction;
+                    }
+                }
+            }
+
+
+        }
+    }
+    the_walk
+}
 pub fn brute_force() {
     let points = get_input();
     let mut maxSurface: i128 = 0;
@@ -28,66 +114,28 @@ fn get_input() -> Vec<(i128, i128)> {
     }
     points
 }
-fn find_intersection(vec1: &[i128], vec2: &[i128]) -> Vec<i128> {
-    let mut ret: Vec<i128> = vec![-1, -1];
-    if vec1[0] == -1 || vec1[1] ==-1 || vec2[0] ==-1 || vec2[1] == -1 {
-        return ret;
+
+fn find_the_upper_left_point(points: &[(i128, i128)]) -> (i128, i128) {
+    let mut s:BTreeMap<i128,i128>=BTreeMap::new();
+    for p in points{
+        match s.get(&p.1){
+            None=>{
+                s.insert(p.1,p.0);
+            },
+            Some(x)=>{
+                s.insert(p.1,*x.min(&p.0));
+            }
+        }
     }
-    let maxl = vec1[0].max(vec2[0]);
-    let minr = vec1[1].min(vec2[1]);
-    if (maxl <= minr) {
-        ret = vec![maxl, minr];
-    }
-    ret
+    let keys:Vec<&i128> =s.keys().collect();
+    let y = keys[0];
+    let x = s[y];
+    (x,*y)
 }
-pub fn green_red() {
-    let dots = get_input();
-    let mut map: BTreeMap<i128, Vec<i128>> = BTreeMap::new();
-    for d in dots {
-        let y = d.1;
-        match map.get_mut(&y) {
-            None => {
-                map.insert(y, vec![d.0]);
-            }
-            Some(v) => {
-                // based on the input its always sorted, and it will have only 2 items in vector
-                v.push(d.0);
-            }
-        }
-    }
-    print!("map {:#?}", map);
-    let mut max_rectangle_area: i128 = 0;
-    let keys_vec: Vec<i128> = map.keys().copied().collect();
-    for upper_y_ind in 0..keys_vec.len() - 1 {
-        let upper_y = keys_vec[upper_y_ind];
-        let upper_line = map.get(&upper_y).unwrap();
-        let mut intersection = upper_line.clone();
-        for lower_y_ind in upper_y_ind + 1..keys_vec.len() {
-            let lower_y = keys_vec[lower_y_ind];
-            let lower_line = map.get(&(upper_y as i128)).unwrap();
-            intersection = find_intersection(&intersection, lower_line);
-            if lower_y == upper_y + 1 && intersection[0] != -1 {
-                // for neighbouring line, intersection is the x width;
-                let w = intersection[1] - intersection[0] + 1;
-                let h = lower_y - upper_y + 1;
-                let area = w * h;
-                if max_rectangle_area < area {
-                    max_rectangle_area = area;
-                }
-            }
-            if lower_line[0] >= intersection[0]
-                && upper_line[0] >= intersection[0]
-                && lower_line[1] <= intersection[1]
-                && upper_line[1] <= intersection[1]
-            {
-                let w = intersection[1] - intersection[0] + 1;
-                let h = lower_y - upper_y + 1;
-                let area = w * h;
-                if max_rectangle_area < area {
-                    max_rectangle_area = area;
-                }
-            }
-        }
-    }
-    print!("Max rectangle area {max_rectangle_area}");
+pub fn do_the_elf_walk() {
+    let points = get_input();
+    let point = find_the_upper_left_point(&points);
+    let elfWalk = construct_elf_walk(&point, &points);
+    print!("Debug elf walk {:#?}",elfWalk);
+
 }
