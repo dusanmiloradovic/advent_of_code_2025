@@ -23,7 +23,8 @@ fn remove_point(points: &[(i128, i128)], point: (i128, i128)) -> Vec<(i128, i128
     let v: Vec<(i128, i128)> = points.iter().filter(|&c| *c != point).cloned().collect();
     v
 }
-fn construct_elf_walk(points: &[(i128, i128)]) -> Vec<ElfWalk> {
+fn construct_elf_walk(points: &[(i128, i128)])  {
+
     let mut vertical_direction = WalkDirection::Down;
     //once we react the bottom, we start going up
     let mut the_walk = ElfWalk::new();
@@ -122,7 +123,7 @@ fn construct_elf_walk(points: &[(i128, i128)]) -> Vec<ElfWalk> {
             }
         }
     }
-    ret_walks
+    print!("max area : {max_area}");
 }
 pub fn brute_force() {
     let points = get_input();
@@ -141,7 +142,7 @@ pub fn brute_force() {
 }
 
 fn get_input() -> Vec<(i128, i128)> {
-    let str_vec = utils::read_file("puzzle_input_day9.txt");
+    let str_vec = utils::read_file("puzzle_input_day9_test.txt");
     let mut points: Vec<(i128, i128)> = Vec::new();
     for v in str_vec {
         let gg = v.split(",").collect::<Vec<&str>>();
@@ -262,6 +263,10 @@ fn do_the_elf_walk(
             }
         }
     }
-    print!("Max area = {max_area}\n");
+    print!("Max walk area = {max_area}\n");
     max_area
+}
+pub fn help_the_elves(){
+    let points = get_input();
+    construct_elf_walk(&points);
 }

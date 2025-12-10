@@ -25,5 +25,5 @@ fn main() {
    // beam_splitter::get_count_of_tree();
     //beam_splitter::get_beam_splits();
     //junction_boxes::get_areas_mul();
-    rectangles::do_the_elf_walk();
+    rectangles::help_the_elves();
 }
