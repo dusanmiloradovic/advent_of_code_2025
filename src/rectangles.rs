@@ -18,75 +18,111 @@ struct ElfWalkStep {
 type ElfWalk = Vec<ElfWalkStep>;
 // This is a directed cyclic graph (ring) that gives the path
 
-fn construct_elf_walk(initial_point: &(i128, i128), points: &[(i128, i128)]) -> ElfWalk {
+fn remove_point(points: &[(i128, i128)], point: (i128, i128)) -> Vec<(i128, i128)> {
+    //immutable "remove", clone
+    let v: Vec<(i128, i128)> = points.iter().filter(|&c| *c != point).cloned().collect();
+    v
+}
+fn construct_elf_walk(points: &[(i128, i128)]) -> Vec<ElfWalk> {
     let mut vertical_direction = WalkDirection::Down;
     //once we react the bottom, we start going up
     let mut the_walk = ElfWalk::new();
+    let mut ret_walks: Vec<ElfWalk> = Vec::new();
+    let mut remaining_points = points.clone().to_vec();
+    let mut max_area:i128 = 0;
     // The points are ordered by the row number of the input, and from the first point we are going right and down
-    let mut point = initial_point;
-    let mut current_direction = WalkDirection::Down; // the direction is the previous direction how we appear, 
     loop {
-        if current_direction == WalkDirection::Up
-            && point.0 == initial_point.0
-            && point.1 == initial_point.1
-        {
-            break; //back to starting point, loop is complete
+        //break here if no more points
+        if remaining_points.len() == 0 {
+            break;
         }
-        //break when the next point is the first point in the cycle TODO
-        if current_direction == WalkDirection::Up || current_direction == WalkDirection::Down {
-            let v = points
-                .into_iter()
-                .find(|p| p.1 == point.1 && p.0 != point.0)
-                .unwrap(); // should not panic if everything good
-            let dist = (point.0 - v.0).abs() as usize;
-            let mut new_direction = WalkDirection::Right;
-            if v.0 < point.0 {
-                new_direction = WalkDirection::Left;
-            }
-            let step = ElfWalkStep {
-                moves: dist,
-                direction: new_direction,
-            };
-            point = v;
-            the_walk.push(step);
-            current_direction = new_direction;
-        } else {
-            if vertical_direction == WalkDirection::Down {
-                match points.into_iter().find(|p| p.1 > point.1 && p.0 == point.0) {
-                    None => {
-                        vertical_direction = WalkDirection::Up;
-                    }
-                    Some(p) => {
-                        let dist = (point.1 - p.1).abs() as usize;
-                        point = p;
-                        let step = ElfWalkStep {
-                            moves: dist,
-                            direction: vertical_direction,
-                        };
-                        the_walk.push(step);
-                        current_direction = vertical_direction;
-                    }
+        let (initial_point, last_row_number) = find_the_upper_left_point(&remaining_points);
+        let mut point = initial_point;
+        let mut current_direction = WalkDirection::Down; // the direction is the previous direction how we appear, 
+        loop {
+            if current_direction == WalkDirection::Up
+                && point.0 == initial_point.0
+                && point.1 == initial_point.1
+            {
+                remaining_points = remove_point(&remaining_points, point);
+
+               // ret_walks.push(the_walk);
+                let max_walk_area =
+                    do_the_elf_walk(initial_point, &remaining_points, the_walk, last_row_number);
+                if max_walk_area>max_area{
+                    max_area=max_walk_area;
                 }
+                the_walk = ElfWalk::new();
+                break; //back to starting point, loop is complete
+            }
+            //break when the next point is the first point in the cycle TODO
+            if current_direction == WalkDirection::Up || current_direction == WalkDirection::Down {
+                let v = points
+                    .into_iter()
+                    .find(|p| p.1 == point.1 && p.0 != point.0)
+                    .unwrap(); // should not panic if everything good
+                let dist = (point.0 - v.0).abs() as usize;
+                let mut new_direction = WalkDirection::Right;
+                if v.0 < point.0 {
+                    new_direction = WalkDirection::Left;
+                }
+                let step = ElfWalkStep {
+                    moves: dist,
+                    direction: new_direction,
+                };
+                remaining_points = remove_point(&remaining_points, point);
+                point = *v;
+                the_walk.push(step);
+                current_direction = new_direction;
             } else {
-                match points.into_iter().find(|p| p.1 < point.1 && p.0 == point.0) {
-                    None => {
-                        break; // we reached the end and closed the curcuit
+                if vertical_direction == WalkDirection::Down {
+                    match points.into_iter().find(|p| p.1 > point.1 && p.0 == point.0) {
+                        None => {
+                            vertical_direction = WalkDirection::Up;
+                            remaining_points = remove_point(&remaining_points, point);
+                        }
+                        Some(p) => {
+                            let dist = (point.1 - p.1).abs() as usize;
+                            remaining_points = remove_point(&remaining_points, point);
+                            point = *p;
+                            let step = ElfWalkStep {
+                                moves: dist,
+                                direction: vertical_direction,
+                            };
+                            the_walk.push(step);
+                            current_direction = vertical_direction;
+                        }
                     }
-                    Some(p) => {
-                        let dist = (point.1 - p.1).abs() as usize;
-                        point = p;
-                        let step = ElfWalkStep {
-                            moves: dist,
-                            direction: vertical_direction,
-                        };
-                        the_walk.push(step);
-                        current_direction = vertical_direction;
+                } else {
+                    match points.into_iter().find(|p| p.1 < point.1 && p.0 == point.0) {
+                        None => {
+                           // ret_walks.push(the_walk);
+                            let max_walk_area =
+                                do_the_elf_walk(initial_point, &remaining_points, the_walk, last_row_number);
+                            if max_walk_area>max_area{
+                                max_area=max_walk_area;
+                            }
+                            the_walk = ElfWalk::new();
+                            remaining_points = remove_point(&remaining_points, point);
+                            break; // we reached the end and closed the curcuit
+                        }
+                        Some(p) => {
+                            let dist = (point.1 - p.1).abs() as usize;
+                            remaining_points = remove_point(&remaining_points, point);
+                            point = *p;
+                            let step = ElfWalkStep {
+                                moves: dist,
+                                direction: vertical_direction,
+                            };
+                            the_walk.push(step);
+                            current_direction = vertical_direction;
+                        }
                     }
                 }
             }
         }
     }
-    the_walk
+    ret_walks
 }
 pub fn brute_force() {
     let points = get_input();
@@ -105,7 +141,7 @@ pub fn brute_force() {
 }
 
 fn get_input() -> Vec<(i128, i128)> {
-    let str_vec = utils::read_file("puzzle_input_day9_test.txt");
+    let str_vec = utils::read_file("puzzle_input_day9.txt");
     let mut points: Vec<(i128, i128)> = Vec::new();
     for v in str_vec {
         let gg = v.split(",").collect::<Vec<&str>>();
@@ -152,19 +188,25 @@ fn rect_in_bounds(point_a: (i128, i128), point_b: (i128, i128), bounds: &[(i128,
     }
     (x_max - x_min + 1) * (y_max - y_min + 1)
 }
-pub fn do_the_elf_walk() {
+fn do_the_elf_walk(
+    starting_point: (i128, i128),
+    points: &[(i128, i128)],
+    elf_walk: ElfWalk,
+    last_row_number: i128,
+) -> i128 {
+    //returns max area
     let mut max_area: i128 = 0;
-    let points = get_input();
-    let (point, last_row_number) = find_the_upper_left_point(&points);
-    let elf_walk = construct_elf_walk(&point, &points);
-    //print!("Debug elf walk {:#?}", elf_walk);
+    // let points = get_input();
+    // let (point, last_row_number) = find_the_upper_left_point(&points);
+    //let elf_walk = construct_elf_walk(&point, &points);
+    // print!("Debug elf walk {:#?}", elf_walk);
     let mut bounds: Vec<(i128, i128)> = vec![(-1, -1); (last_row_number + 1) as usize];
     let el0 = &elf_walk[0];
-    let right_point = point.0 + el0.moves as i128;
-    let ip = (point.0, right_point);
-    let mut current_row = point.1 as usize;
+    let right_point = starting_point.0 + el0.moves as i128;
+    let ip = (starting_point.0, right_point);
+    let mut current_row = starting_point.1 as usize;
     let mut current_column = right_point;
-    bounds[point.1 as usize] = ip;
+    bounds[starting_point.1 as usize] = ip;
     for j in 1..elf_walk.len() {
         let e = &elf_walk[j];
         if e.direction == WalkDirection::Down {
@@ -213,7 +255,7 @@ pub fn do_the_elf_walk() {
             let p2 = points[j];
             let area = rect_in_bounds(p1, p2, &bounds);
             if area != -1 {
-               // print!("Satisfied {:?}.. {:?}, {area}\n", p1, p2);
+                // print!("Satisfied {:?}.. {:?}, {area}\n", p1, p2);
                 if area > max_area {
                     max_area = area;
                 }
@@ -221,4 +263,5 @@ pub fn do_the_elf_walk() {
         }
     }
     print!("Max area = {max_area}\n");
+    max_area
 }
