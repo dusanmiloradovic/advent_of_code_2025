@@ -138,6 +138,21 @@ fn construct_elf_walk(points: &[(i128, i128)]) {
     }
     let painted_area = paint_area(&points ,multiple_bounds);
    // print!("multiple bounds\n{:?}",multiple_bounds);
+    let mut max_area:i128 = 0;
+    for i in 0..points.len() {
+        for j in i..points.len() {
+            let p1 = points[i];
+            let p2 = points[j];
+            let area = rect_in_bounds(p1, p2, &painted_area);
+            if area != -1 {
+                // print!("Satisfied {:?}.. {:?}, {area}\n", p1, p2);
+                if area > max_area {
+                    max_area = area;
+                }
+            }
+        }
+    }
+    print!("max area {max_area}");
 }
 pub fn brute_force() {
     let points = get_input();
@@ -156,7 +171,7 @@ pub fn brute_force() {
 }
 
 fn get_input() -> Vec<(i128, i128)> {
-    let str_vec = utils::read_file("puzzle_input_day9.txt");
+    let str_vec = utils::read_file("puzzle_input_day9_test.txt");
     let mut points: Vec<(i128, i128)> = Vec::new();
     for v in str_vec {
         let gg = v.split(",").collect::<Vec<&str>>();
@@ -187,18 +202,18 @@ fn find_the_upper_left_point(points: &[(i128, i128)]) -> ((i128, i128), i128) {
     ((x, *y), *z)
 }
 
-fn rect_in_bounds(point_a: (i128, i128), point_b: (i128, i128), bounds: &[(i128, i128)]) -> i128 {
+fn rect_in_bounds(point_a: (i128, i128), point_b: (i128, i128), painted_area:&Vec<Vec<bool>>) -> i128 {
     let x_min = point_a.0.min(point_b.0);
     let x_max = point_a.0.max(point_b.0);
     let y_min = point_a.1.min(point_b.1);
     let y_max = point_a.1.max(point_b.1);
+
     for y in y_min..=y_max {
-        let ex_bound = bounds[y as usize];
-        if ex_bound.0 == -1 {
-            return -1;
-        }
-        if !(x_min >= ex_bound.0 && x_max <= ex_bound.1) {
-            return -1;
+        let painted_row=&painted_area[y as usize];
+        for i in x_min..=x_max{
+            if  painted_row[i as usize] ==false{
+                return -1;
+            }
         }
     }
     (x_max - x_min + 1) * (y_max - y_min + 1)
@@ -256,21 +271,6 @@ fn do_the_elf_walk(
             }
         }
     }
-    //print!("Bounds\n{:?}", bounds);
-    // for i in 0..points.len() {
-    //     for j in i..points.len() {
-    //         let p1 = points[i];
-    //         let p2 = points[j];
-    //         let area = rect_in_bounds(p1, p2, &bounds);
-    //         if area != -1 {
-    //             // print!("Satisfied {:?}.. {:?}, {area}\n", p1, p2);
-    //             if area > max_area {
-    //                 max_area = area;
-    //             }
-    //         }
-    //     }
-    // }
-  //  print!("Max walk area = {max_area}\n");
     bounds
 }
 
@@ -290,6 +290,7 @@ fn paint_area(points:&[(i128, i128)], multiple_bounds:Vec<Vec<(i128, i128)> >  )
     let mut ret:Vec<Vec<bool>> = Vec::new();
     let mut xs:Vec<i128>=Vec::new();
     let mut ys:Vec<i128>=Vec::new();
+    let mut painted =0;
     for p in points{
         xs.push(p.0);
         ys.push(p.1);
@@ -317,18 +318,22 @@ fn paint_area(points:&[(i128, i128)], multiple_bounds:Vec<Vec<(i128, i128)> >  )
             let row=&mut ret[i];
             if left_bound == -1{
                 row[right_bound as usize]=true;
+                painted+=1;
                 continue;
             }
             if right_bound ==-1{
                 row[left_bound as usize]=true;
+                painted+=1;
                 continue;
             }
             for b in left_bound..=right_bound{
                 row[b as usize]=true;
+                painted+=1;
             }
         }
     }
-    print_paint_area(&ret);
+   // print_paint_area(&ret);
+    print!("Painted ${painted}");
     ret
 }
 
