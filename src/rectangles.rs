@@ -171,7 +171,7 @@ pub fn brute_force() {
 }
 
 fn get_input() -> Vec<(i128, i128)> {
-    let str_vec = utils::read_file("puzzle_input_day9_test.txt");
+    let str_vec = utils::read_file("puzzle_input_day9.txt");
     let mut points: Vec<(i128, i128)> = Vec::new();
     for v in str_vec {
         let gg = v.split(",").collect::<Vec<&str>>();
