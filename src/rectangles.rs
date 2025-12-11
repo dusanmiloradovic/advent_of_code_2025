@@ -23,14 +23,22 @@ fn remove_point(points: &[(i128, i128)], point: (i128, i128)) -> Vec<(i128, i128
     let v: Vec<(i128, i128)> = points.iter().filter(|&c| *c != point).cloned().collect();
     v
 }
+
+fn remove_multiple_points (points: &[(i128, i128)], points_to_remove: &[(i128, i128)]) -> Vec<(i128, i128)>{
+    let mut pp = points.to_vec();
+    for p in points_to_remove{
+        pp = remove_point(&pp, *p);
+    }
+    pp
+}
 fn construct_elf_walk(points: &[(i128, i128)])  {
 
     let mut vertical_direction = WalkDirection::Down;
     //once we react the bottom, we start going up
     let mut the_walk = ElfWalk::new();
-    let mut ret_walks: Vec<ElfWalk> = Vec::new();
     let mut remaining_points = points.clone().to_vec();
     let mut max_area:i128 = 0;
+    let mut points_to_remove:Vec<(i128,i128)> = Vec::new();
     // The points are ordered by the row number of the input, and from the first point we are going right and down
     loop {
         //break here if no more points
@@ -45,7 +53,8 @@ fn construct_elf_walk(points: &[(i128, i128)])  {
                 && point.0 == initial_point.0
                 && point.1 == initial_point.1
             {
-                remaining_points = remove_point(&remaining_points, point);
+               // remaining_points = remove_point(&remaining_points, point);
+                points_to_remove.push(point);
 
                // ret_walks.push(the_walk);
                 let max_walk_area =
@@ -54,6 +63,8 @@ fn construct_elf_walk(points: &[(i128, i128)])  {
                     max_area=max_walk_area;
                 }
                 the_walk = ElfWalk::new();
+                remaining_points = remove_multiple_points(&remaining_points, &points_to_remove);
+                points_to_remove = Vec::new();
                 break; //back to starting point, loop is complete
             }
             //break when the next point is the first point in the cycle TODO
@@ -71,7 +82,8 @@ fn construct_elf_walk(points: &[(i128, i128)])  {
                     moves: dist,
                     direction: new_direction,
                 };
-                remaining_points = remove_point(&remaining_points, point);
+                //remaining_points = remove_point(&remaining_points, point);
+                points_to_remove.push(point);
                 point = *v;
                 the_walk.push(step);
                 current_direction = new_direction;
@@ -80,11 +92,13 @@ fn construct_elf_walk(points: &[(i128, i128)])  {
                     match points.into_iter().find(|p| p.1 > point.1 && p.0 == point.0) {
                         None => {
                             vertical_direction = WalkDirection::Up;
-                            remaining_points = remove_point(&remaining_points, point);
+                           // remaining_points = remove_point(&remaining_points, point);
+                            points_to_remove.push(point);
                         }
                         Some(p) => {
                             let dist = (point.1 - p.1).abs() as usize;
-                            remaining_points = remove_point(&remaining_points, point);
+                            //remaining_points = remove_point(&remaining_points, point);
+                            points_to_remove.push(point);
                             point = *p;
                             let step = ElfWalkStep {
                                 moves: dist,
@@ -104,12 +118,16 @@ fn construct_elf_walk(points: &[(i128, i128)])  {
                                 max_area=max_walk_area;
                             }
                             the_walk = ElfWalk::new();
-                            remaining_points = remove_point(&remaining_points, point);
+                            //remaining_points = remove_point(&remaining_points, point);
+                            points_to_remove.push(point);
+                            remaining_points = remove_multiple_points(&remaining_points, &points_to_remove);
+                            points_to_remove = Vec::new();
                             break; // we reached the end and closed the curcuit
                         }
                         Some(p) => {
                             let dist = (point.1 - p.1).abs() as usize;
-                            remaining_points = remove_point(&remaining_points, point);
+                           // remaining_points = remove_point(&remaining_points, point);
+                            points_to_remove.push(point);
                             point = *p;
                             let step = ElfWalkStep {
                                 moves: dist,
@@ -142,7 +160,7 @@ pub fn brute_force() {
 }
 
 fn get_input() -> Vec<(i128, i128)> {
-    let str_vec = utils::read_file("puzzle_input_day9_test.txt");
+    let str_vec = utils::read_file("puzzle_input_day9.txt");
     let mut points: Vec<(i128, i128)> = Vec::new();
     for v in str_vec {
         let gg = v.split(",").collect::<Vec<&str>>();
